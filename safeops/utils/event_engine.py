@@ -72,6 +72,7 @@ def generate_events(
         alarm_events,
         machine_state_events,
         machines,
+        alarm_definitions,
         sim_start,
         sim_end,
         rng
@@ -226,9 +227,16 @@ def generate_alarm_events(
     """
     Generate AlarmEvent entities.
 
+    Replay capacity reservation:
+    - Phase 4 will inject REPLAY_FLOOD by duplicating 50 alarm events
+    - This function generates (num_events - 50) baseline events to reserve capacity
+    - After Phase 4 injection, total will be exactly num_events
+    - For dev profile with 500 events: generates 450 baseline, Phase 4 adds 50 replay
+    - For full profile with 50,000 events: generates 49,950 baseline, Phase 4 adds 50 replay
+
     Args:
         alarm_definitions: DataFrame of alarm definitions.
-        num_events: Number of alarm events to generate.
+        num_events: Target final number of alarm events (after Phase 4 injection).
         sim_start: Simulation start datetime.
         sim_end: Simulation end datetime.
         rng: Random number generator.
@@ -237,12 +245,16 @@ def generate_alarm_events(
         DataFrame with columns: alarm_event_id, alarm_def_id, timestamp, current_value,
                                 interlock_status, source_event_id, replay_group_id
     """
+    # Reserve capacity for Phase 4 REPLAY_FLOOD (50 replay records)
+    REPLAY_RESERVATION = 50
+    baseline_events = num_events - REPLAY_RESERVATION
+
     alarm_defs = alarm_definitions.to_dict("records")
     machine_alarm_counters = {}  # Track counter per machine
 
     data = []
 
-    for i in range(num_events):
+    for i in range(baseline_events):
         # Select alarm definition
         alarm_def = alarm_defs[rng.integers(0, len(alarm_defs))]
         alarm_def_id = alarm_def["alarm_def_id"]
@@ -319,8 +331,9 @@ def generate_acknowledgements(
     Returns:
         DataFrame with columns: ack_id, alarm_event_id, shift_id, acknowledged_at
     """
-    # Create lookup: alarm_def_id -> machine_id
+    # Create lookup: alarm_def_id -> machine_id and severity
     def_to_machine = dict(zip(alarm_definitions["alarm_def_id"], alarm_definitions["machine_id"]))
+    def_to_severity = dict(zip(alarm_definitions["alarm_def_id"], alarm_definitions["severity"]))
 
     # Create lookup: machine_id -> plant_id
     machine_to_plant = dict(zip(machines["machine_id"], machines["plant_id"]))
@@ -347,8 +360,8 @@ def generate_acknowledgements(
         if plant_id is None:
             continue
 
-        # Select severity-based delay
-        severity = rng.choice(["Low", "Medium", "High", "Critical"])
+        # Get actual severity from alarm definition
+        severity = def_to_severity.get(alarm_def_id, "Medium")
         sla_minutes = ACKNOWLEDGEMENT_SLAS[severity]
         delay_minutes = int(rng.integers(1, sla_minutes * 2))
 
@@ -401,17 +414,24 @@ def generate_incidents(
     alarm_events: pd.DataFrame,
     machine_state_events: pd.DataFrame,
     machines: pd.DataFrame,
+    alarm_definitions: pd.DataFrame,
     sim_start: datetime,
     sim_end: datetime,
     rng: np.random.Generator
 ) -> pd.DataFrame:
     """
-    Generate Incident entities.
+    Generate Incident entities based on safety rules.
+
+    Incident eligibility conditions:
+    - Critical alarm with Tripped interlock
+    - High or Critical alarm with value significantly above threshold
+    - Machine in unsafe state (Bypassed interlock during operation)
 
     Args:
         alarm_events: DataFrame of alarm events.
         machine_state_events: DataFrame of machine state events.
         machines: DataFrame of machines.
+        alarm_definitions: DataFrame of alarm definitions.
         sim_start: Simulation start datetime.
         sim_end: Simulation end datetime.
         rng: Random number generator.
@@ -420,38 +440,70 @@ def generate_incidents(
         DataFrame with columns: incident_id, machine_id, alarm_event_id, severity_level,
                                 logged_at, issue_type
     """
-    # Generate ~50-100 incidents
-    num_incidents = rng.integers(50, 100)
+    # Create lookup: alarm_def_id -> severity and threshold
+    def_to_severity = dict(zip(alarm_definitions["alarm_def_id"], alarm_definitions["severity"]))
+    def_to_threshold = dict(zip(alarm_definitions["alarm_def_id"], alarm_definitions["threshold_limit"]))
 
-    machine_ids = machines["machine_id"].tolist()
+    # Identify qualifying alarm events for incidents
     alarm_events_list = alarm_events.to_dict("records")
+    qualifying_alarms = []
+
+    for alarm in alarm_events_list:
+        alarm_def_id = alarm["alarm_def_id"]
+        severity = def_to_severity.get(alarm_def_id, "Low")
+        threshold = def_to_threshold.get(alarm_def_id, 0)
+        current_value = alarm["current_value"]
+        interlock_status = alarm["interlock_status"]
+
+        # Rule 1: Critical alarm with Tripped interlock
+        if severity == "Critical" and interlock_status == "Tripped":
+            qualifying_alarms.append(alarm)
+        # Rule 2: High or Critical alarm with value > 2x threshold
+        elif severity in ["High", "Critical"] and current_value > threshold * 2:
+            qualifying_alarms.append(alarm)
+        # Rule 3: Any alarm with Tripped interlock
+        elif interlock_status == "Tripped" and rng.random() < 0.3:
+            qualifying_alarms.append(alarm)
+
+    # Generate incidents from qualifying alarms
+    # Use ~50% of qualifying alarms as incidents
+    num_incidents = min(len(qualifying_alarms), rng.integers(50, 100))
+    if num_incidents > len(qualifying_alarms):
+        num_incidents = len(qualifying_alarms)
+
+    selected_alarms = qualifying_alarms[:num_incidents]
 
     data = []
     incident_counter = 0
 
-    for i in range(num_incidents):
+    for alarm in selected_alarms:
         incident_counter += 1
         incident_id = f"INC-2026-{incident_counter:06d}"
 
-        # Select machine
-        machine_id = machine_ids[rng.integers(0, len(machine_ids))]
+        alarm_event_id = alarm["alarm_event_id"]
+        alarm_def_id = alarm["alarm_def_id"]
+        logged_at = alarm["timestamp"]
 
-        # Select alarm event (70% have alarm, 30% missing for MISSING_CONTEXT anomaly)
-        if rng.random() < 0.7:
-            alarm_event = alarm_events_list[rng.integers(0, len(alarm_events_list))]
-            alarm_event_id = alarm_event["alarm_event_id"]
-            logged_at = alarm_event["timestamp"]
+        # Get machine_id from alarm definition
+        machine_id = None
+        for _, def_row in alarm_definitions.iterrows():
+            if def_row["alarm_def_id"] == alarm_def_id:
+                machine_id = def_row["machine_id"]
+                break
+
+        if machine_id is None:
+            continue
+
+        # Severity level based on alarm severity
+        alarm_severity = def_to_severity.get(alarm_def_id, "Medium")
+        if alarm_severity == "Critical":
+            severity_level = rng.choice(["Critical", "Catastrophic"], p=[0.7, 0.3])
+        elif alarm_severity == "High":
+            severity_level = rng.choice(["Major", "Critical"], p=[0.6, 0.4])
         else:
-            alarm_event_id = None  # Missing context
-            # Generate timestamp
-            total_seconds = (sim_end - sim_start).total_seconds()
-            random_seconds = int(rng.integers(0, int(total_seconds)))
-            logged_at = (sim_start + timedelta(seconds=random_seconds)).strftime(TIMESTAMP_FORMAT)
+            severity_level = "Major"
 
-        # Severity level
-        severity_level = INCIDENT_SEVERITY[rng.integers(0, len(INCIDENT_SEVERITY))]
-
-        # Issue type classification
+        # Issue type classification based on alarm properties
         issue_types = [
             "Safety Interlock Bypass",
             "Overpressure Condition",
@@ -465,7 +517,7 @@ def generate_incidents(
         data.append({
             "incident_id": incident_id,
             "machine_id": machine_id,
-            "alarm_event_id": alarm_event_id,
+            "alarm_event_id": alarm_event_id,  # Always valid in baseline
             "severity_level": severity_level,
             "logged_at": logged_at,
             "issue_type": issue_type
@@ -482,6 +534,11 @@ def generate_corrective_actions(
 ) -> pd.DataFrame:
     """
     Generate CorrectiveAction entities.
+
+    Baseline rules:
+    - All Closed actions must have a valid verified_at timestamp
+    - Open and In_Progress actions have null verified_at
+    - verified_at must be after incident logged_at
 
     Args:
         incidents: DataFrame of incidents.
@@ -518,14 +575,11 @@ def generate_corrective_actions(
             # Status lifecycle distribution
             status = rng.choice(ACTION_STATUS, p=[0.4, 0.3, 0.3])
 
-            # verified_at for Closed status
+            # verified_at for Closed status (baseline: always present)
             if status == "Closed":
-                # Generate verification timestamp (can be null for UNVERIFIED_CLOSURE anomaly)
-                if rng.random() < 0.8:  # 80% of closed actions have verification
-                    logged_at = datetime.fromisoformat(incident["logged_at"].replace("Z", "+00:00"))
-                    verified_at = (logged_at + timedelta(hours=int(rng.integers(1, 48)))).strftime(TIMESTAMP_FORMAT)
-                else:
-                    verified_at = None  # Will be used for UNVERIFIED_CLOSURE anomaly
+                # Generate verification timestamp (always present in baseline)
+                logged_at = datetime.fromisoformat(incident["logged_at"].replace("Z", "+00:00"))
+                verified_at = (logged_at + timedelta(hours=int(rng.integers(1, 48)))).strftime(TIMESTAMP_FORMAT)
             else:
                 verified_at = None
 

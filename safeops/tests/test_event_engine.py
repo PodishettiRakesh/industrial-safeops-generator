@@ -235,24 +235,28 @@ class TestAlarmEvents:
     """Test AlarmEvent entity generation."""
 
     def test_alarm_events_row_count_dev(self):
-        """Verify dev profile generates correct number of alarm events."""
+        """Verify dev profile generates correct number of alarm events (minus replay reservation)."""
         rng = np.random.default_rng(20261022)
         master_data = generate_master_data("dev", rng)
         rng = np.random.default_rng(20261022)
         result = generate_events(master_data, "dev", rng)
         alarm_events = result["alarm_events"]
 
-        assert len(alarm_events) == PROFILES["dev"]["num_alarm_events"]
+        # Baseline generates (num_events - 50) to reserve capacity for Phase 4 replay
+        expected = PROFILES["dev"]["num_alarm_events"] - 50
+        assert len(alarm_events) == expected
 
     def test_alarm_events_row_count_full(self):
-        """Verify full profile generates correct number of alarm events."""
+        """Verify full profile generates correct number of alarm events (minus replay reservation)."""
         rng = np.random.default_rng(20261022)
         master_data = generate_master_data("full", rng)
         rng = np.random.default_rng(20261022)
         result = generate_events(master_data, "full", rng)
         alarm_events = result["alarm_events"]
 
-        assert len(alarm_events) == PROFILES["full"]["num_alarm_events"]
+        # Baseline generates (num_events - 50) to reserve capacity for Phase 4 replay
+        expected = PROFILES["full"]["num_alarm_events"] - 50
+        assert len(alarm_events) == expected
 
     def test_alarm_events_columns(self):
         """Verify alarm_events DataFrame has correct columns."""
@@ -401,16 +405,16 @@ class TestIncidents:
         for machine_id in incidents["machine_id"]:
             assert machine_id in valid_machine_ids, f"Invalid machine_id: {machine_id}"
 
-    def test_incidents_alarm_nullable(self):
-        """Verify alarm_event_id can be null (for MISSING_CONTEXT anomaly)."""
+    def test_incidents_alarm_not_null_baseline(self):
+        """Verify baseline incidents have valid alarm_event_id (no MISSING_CONTEXT in baseline)."""
         rng = np.random.default_rng(20261022)
         master_data = generate_master_data("dev", rng)
         rng = np.random.default_rng(20261022)
         result = generate_events(master_data, "dev", rng)
         incidents = result["incidents"]
 
-        # Some incidents should have null alarm_event_id
-        assert incidents["alarm_event_id"].isna().any()
+        # Baseline incidents should all have valid alarm_event_id
+        assert incidents["alarm_event_id"].notna().all(), "Baseline incidents must have valid alarm_event_id"
 
     def test_incidents_severity_enum_valid(self):
         """Verify severity_level uses allowed enum values."""
@@ -433,6 +437,40 @@ class TestIncidents:
 
         expected_order = incidents.sort_values(["logged_at", "incident_id"])
         pd.testing.assert_frame_equal(incidents, expected_order)
+
+    def test_incidents_based_on_safety_rules(self):
+        """Verify incidents are generated from qualifying alarms based on safety rules."""
+        rng = np.random.default_rng(20261022)
+        master_data = generate_master_data("dev", rng)
+        rng = np.random.default_rng(20261022)
+        result = generate_events(master_data, "dev", rng)
+        incidents = result["incidents"]
+        alarm_events = result["alarm_events"]
+        alarm_definitions = master_data["alarm_definitions"]
+
+        # Create severity lookup
+        def_to_severity = dict(zip(alarm_definitions["alarm_def_id"], alarm_definitions["severity"]))
+
+        # All incidents should reference valid alarm events
+        assert incidents["alarm_event_id"].notna().all()
+
+        # Verify incident alarms are qualifying (critical+tripped, high+2xthreshold, or tripped)
+        for _, incident in incidents.iterrows():
+            alarm_event_id = incident["alarm_event_id"]
+            alarm = alarm_events[alarm_events["alarm_event_id"] == alarm_event_id].iloc[0]
+            alarm_def_id = alarm["alarm_def_id"]
+            severity = def_to_severity.get(alarm_def_id, "Low")
+            threshold = alarm_definitions[alarm_definitions["alarm_def_id"] == alarm_def_id].iloc[0]["threshold_limit"]
+            current_value = alarm["current_value"]
+            interlock_status = alarm["interlock_status"]
+
+            # Check if qualifies under safety rules
+            qualifies = (
+                (severity == "Critical" and interlock_status == "Tripped") or
+                (severity in ["High", "Critical"] and current_value > threshold * 2) or
+                (interlock_status == "Tripped")
+            )
+            assert qualifies, f"Incident {incident['incident_id']} does not qualify under safety rules"
 
 
 class TestCorrectiveActions:
@@ -483,16 +521,18 @@ class TestCorrectiveActions:
         for status in actions["status"]:
             assert status in ACTION_STATUS, f"Invalid status: {status}"
 
-    def test_corrective_actions_verified_nullable(self):
-        """Verify verified_at can be null (for UNVERIFIED_CLOSURE anomaly)."""
+    def test_corrective_actions_closed_has_verification(self):
+        """Verify baseline Closed actions have verified_at (no UNVERIFIED_CLOSURE in baseline)."""
         rng = np.random.default_rng(20261022)
         master_data = generate_master_data("dev", rng)
         rng = np.random.default_rng(20261022)
         result = generate_events(master_data, "dev", rng)
         actions = result["corrective_actions"]
 
-        # Some actions should have null verified_at
-        assert actions["verified_at"].isna().any()
+        # Closed actions should have verified_at in baseline
+        closed_actions = actions[actions["status"] == "Closed"]
+        if len(closed_actions) > 0:
+            assert closed_actions["verified_at"].notna().all(), "Baseline Closed actions must have verified_at"
 
     def test_corrective_actions_sorted(self):
         """Verify actions are sorted by incident_id and action_id."""
