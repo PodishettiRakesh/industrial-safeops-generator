@@ -542,16 +542,15 @@ The system generates 10 core entities organized into two categories:
 
 The following features are **not supported** in the current implementation:
 
-1. **External Database Integration:** CSV-only export (no direct database export)
-2. **SQL Seed Data Export:** Not implemented (CSV and JSON only)
-3. **Effective Date Ranges:** Entities do not have effective start/end dates (current state only)
-4. **Bridge Tables:** No many-to-many relationships requiring bridge tables
-5. **Lifecycle State Transitions:** Status changes are recorded as events, not state transitions with effective dates
-6. **Time Travel Queries:** Historical state queries require joining event tables (no current state table)
-7. **Multitenancy:** No tenant isolation or organization-level scoping
-8. **Audit Trail:** No explicit audit trail table (changes are event records)
-9. **Soft Deletes:** No soft delete mechanism (records are immutable)
-10. **Versioning:** No entity versioning or change history tables
+1. **External Database Integration:** CSV and SQL export only (no direct database connection)
+2. **Effective Date Ranges:** Entities do not have effective start/end dates (current state only)
+3. **Bridge Tables:** No many-to-many relationships requiring bridge tables
+4. **Lifecycle State Transitions:** Status changes are recorded as events, not state transitions with effective dates
+5. **Time Travel Queries:** Historical state queries require joining event tables (no current state table)
+6. **Multitenancy:** No tenant isolation or organization-level scoping
+7. **Audit Trail:** No explicit audit trail table (changes are event records)
+8. **Soft Deletes:** No soft delete mechanism (records are immutable)
+9. **Versioning:** No entity versioning or change history tables
 
 ---
 

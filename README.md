@@ -1,6 +1,6 @@
 # SafeOps Generator
 
-A deterministic, production-grade synthetic data engine simulating 30 days of industrial OT telemetry, operator workflows, and critical safety violations for testing and validating safety monitoring systems.
+A deterministic synthetic data engine simulating 30 days of industrial OT telemetry, operator workflows, and critical safety violations for testing and validating safety monitoring systems.
 
 ## Project Purpose
 
@@ -59,7 +59,7 @@ python -m safeops.generator --profile dev --output-dir output_dev
 - ~50-100 incidents
 - ~100-300 corrective actions
 
-### FULL Profile (Production)
+### FULL Profile (Large-Scale Testing)
 
 Generate a large-scale dataset:
 ```bash
@@ -112,121 +112,25 @@ The generator follows this pipeline:
 
 ## Data Schema
 
-### Tables and Relationships
+The generator produces 11 core data entities organized into master/reference data and time-series event data.
 
-#### Plants
-**Primary Key:** plant_id
-**Columns:**
-- plant_id (string): Unique plant identifier (format: PLT-XXX)
-- plant_name (string): Plant name
-- location (string): Plant location
-- created_at (timestamp): Creation timestamp
+> **📖 For detailed field definitions, validation rules, and relationships, see [DATA_DICTIONARY.md](DATA_DICTIONARY.md)**
 
-#### Machines
-**Primary Key:** machine_id
-**Foreign Key:** plant_id → Plants
-**Columns:**
-- machine_id (string): Unique machine identifier (format: MCH-XXX)
-- plant_id (string): Reference to plant
-- machine_type (enum): CNC_Mill, Robotic_Arm, Stamping_Press, Furnace
-- model_number (string): Machine model
-- status (enum): Operational, Maintenance, Offline
+### Entity Overview
 
-#### Safety Zones
-**Primary Key:** zone_id
-**Foreign Key:** machine_id → Machines
-**Columns:**
-- zone_id (string): Unique zone identifier (format: SAFE-PLT-XXX-XXX)
-- machine_id (string): Reference to machine
-- zone_type (enum): Perimeter_Laser, Pressure_Mat, Proximity_Radar
-- risk_level (enum): Low, Medium, High, Critical
-
-#### Interlocks
-**Primary Key:** interlock_id
-**Foreign Key:** machine_id → Machines
-**Columns:**
-- interlock_id (string): Unique interlock identifier (format: INT-XXXX)
-- machine_id (string): Reference to machine
-- interlock_type (enum): Mechanical_Guard, Electrical_Relay, Software_E-Stop
-- normal_state (enum): Closed, Engaged, Energized
-
-#### Alarm Definitions
-**Primary Key:** alarm_def_id
-**Foreign Key:** machine_id → Machines
-**Columns:**
-- alarm_def_id (string): Unique alarm definition identifier (format: DEF-XXXX)
-- machine_id (string): Reference to machine
-- metric_name (enum): Temperature, Vibration, Pressure, Voltage
-- severity (enum): Low, Medium, High, Critical
-- threshold_limit (float): Alarm threshold value
-
-#### Operator Shifts
-**Primary Key:** shift_id
-**Foreign Key:** plant_id → Plants
-**Columns:**
-- shift_id (string): Unique shift identifier (format: SHF-2026-XXXXX)
-- plant_id (string): Reference to plant
-- operator_name (string): Operator name
-- start_time (timestamp): Shift start
-- end_time (timestamp): Shift end
-
-#### Machine State Events
-**Primary Key:** state_event_id
-**Foreign Key:** machine_id → Machines
-**Columns:**
-- state_event_id (int): Unique state event identifier
-- machine_id (string): Reference to machine
-- timestamp (timestamp): Event timestamp
-- previous_state (enum): Previous machine status
-- new_state (enum): New machine status
-- interlock_status (enum): Secure, Tripped, Bypassed
-- source_event_id (string): Optional source event reference
-
-#### Alarm Events
-**Primary Key:** alarm_event_id
-**Foreign Key:** alarm_def_id → Alarm Definitions
-**Columns:**
-- alarm_event_id (string): Unique alarm event identifier (format: ALM-MCH-XXX-XXXXXX)
-- alarm_def_id (string): Reference to alarm definition
-- timestamp (timestamp): Alarm timestamp
-- current_value (float): Metric value at alarm time
-- interlock_status (enum): Interlock status at alarm time
-- source_event_id (string): Optional source event reference
-- replay_group_id (string): Replay group identifier for REPLAY_FLOOD anomalies
-
-#### Acknowledgements
-**Primary Key:** ack_id
-**Foreign Keys:**
-- alarm_event_id → Alarm Events
-- shift_id → Operator Shifts
-**Columns:**
-- ack_id (string): Unique acknowledgement identifier (format: ACK-ALM-MCH-XXX-XXXXXX-XX)
-- alarm_event_id (string): Reference to alarm event
-- shift_id (string): Reference to operator shift
-- acknowledged_at (timestamp): Acknowledgement timestamp
-
-#### Incidents
-**Primary Key:** incident_id
-**Foreign Keys:**
-- machine_id → Machines
-- alarm_event_id → Alarm Events (nullable)
-**Columns:**
-- incident_id (string): Unique incident identifier (format: INC-2026-XXXXXX)
-- machine_id (string): Reference to machine
-- alarm_event_id (string): Reference to alarm event (nullable for MISSING_CONTEXT)
-- severity_level (enum): Major, Critical, Catastrophic
-- logged_at (timestamp): Incident log timestamp
-- issue_type (string): Issue description
-
-#### Corrective Actions
-**Primary Key:** action_id
-**Foreign Key:** incident_id → Incidents
-**Columns:**
-- action_id (string): Unique action identifier (format: ACT-INC-2026-XXXXXX-XX)
-- incident_id (string): Reference to incident
-- action_taken (string): Action description
-- status (enum): Open, In_Progress, Closed
-- verified_at (timestamp): Verification timestamp (nullable for UNVERIFIED_CLOSURE)
+| Entity | Purpose | Key Relationships |
+|--------|---------|------------------|
+| **Plants** | Physical factory locations | → Machines (1:N) |
+| **Machines** | Manufacturing equipment | ← Plants (N:1), → Safety Zones (1:N), → Interlocks (1:N), → Alarm Definitions (1:N) |
+| **Safety Zones** | Protected areas around machines | ← Machines (N:1) |
+| **Interlocks** | Safety protection mechanisms | ← Machines (N:1) |
+| **Alarm Definitions** | Configured alarm thresholds | ← Machines (N:1), → Alarm Events (1:N) |
+| **Operator Shifts** | Operator work periods | ← Plants (N:1), → Acknowledgements (1:N) |
+| **Machine State Events** | Machine status transitions | ← Machines (N:1) |
+| **Alarm Events** | Threshold breach occurrences | ← Alarm Definitions (N:1), → Acknowledgements (1:N), → Incidents (1:1 or 0:1) |
+| **Acknowledgements** | Operator responses to alarms | ← Alarm Events (N:1), ← Operator Shifts (N:1) |
+| **Incidents** | Safety incidents | ← Machines (N:1), ← Alarm Events (N:1 or 0:1), → Corrective Actions (1:N) |
+| **Corrective Actions** | Remediation actions | ← Incidents (N:1) |
 
 ## Anomaly Categories
 
@@ -386,7 +290,7 @@ This verifies that two independent generations produce identical files.
 
 ## Output Files
 
-Total: 15 files (11 operational CSVs + 3 metadata + 1 SQL)
+Total: 15 files
 
 ### Operational CSVs (11 files)
 - plants.csv
@@ -426,7 +330,7 @@ Total: 15 files (11 operational CSVs + 3 metadata + 1 SQL)
 - Validation status
 - Generator version
 - Python, pandas, NumPy versions
-- File list with sizes and SHA-256 checksums
+- File list with sizes and SHA-256 checksums (excludes manifest.json itself)
 
 ## Known Assumptions and Limitations
 
@@ -444,7 +348,7 @@ Total: 15 files (11 operational CSVs + 3 metadata + 1 SQL)
 - Replay flood fixed at 50 records (not configurable)
 - Validation does not repair injected anomalies
 - Reproducibility not guaranteed across different dependency versions
-- SQL export uses generic SQL syntax compatible with PostgreSQL, MySQL, and similar databases
+- SQL export uses generic SQL syntax
 
 ## Testing
 
@@ -506,6 +410,7 @@ industrial-safeops-generator/
 │       └── test_generator.py
 ├── requirements.txt
 ├── README.md
+├── DATA_DICTIONARY.md
 └── plan.md
 ```
 
