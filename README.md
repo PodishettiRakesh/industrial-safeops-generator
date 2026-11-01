@@ -229,6 +229,13 @@ The generator follows this pipeline:
 
 ## Anomaly Categories
 
+### Nuisance Alarm Clusters (Operational Metric)
+
+**Description:** Groups of 5 or more Low/Medium severity alarms from the same machine within 10 minutes
+**Detection Rule:** 5+ Low/Medium severity alarms from same machine in 10-minute window
+**Business Significance:** Indicates repeated minor issues that may mask genuine safety problems
+**Validation Report:** Includes cluster count, affected machines, and cluster details
+
 ### 1. ACK_BEFORE_ALARM
 **Description:** Acknowledgement timestamp precedes alarm timestamp
 **Injection Rule:** Select ~1% of acknowledgements and set acknowledged_at to 1 hour before alarm timestamp
@@ -259,6 +266,52 @@ The generator follows this pipeline:
 **Injection Rule:** Select ~1% of Closed actions and set verified_at to null
 **Detection:** status == "Closed" AND verified_at is null
 **Business Rule:** Closed actions must have verification timestamps
+
+## Incident Traceability
+
+Incidents can be traced to relevant machine-state history and corrective actions through foreign key relationships:
+
+### Traceability Paths
+
+1. **Incident → Machine State History**
+   - Join: `incidents.machine_id = machine_state_events.machine_id`
+   - Filter: `machine_state_events.timestamp <= incidents.logged_at`
+   - Purpose: View machine state transitions leading up to the incident
+
+2. **Incident → Triggering Alarm**
+   - Join: `incidents.alarm_event_id = alarm_events.alarm_event_id`
+   - Join: `alarm_events.alarm_def_id = alarm_definitions.alarm_def_id`
+   - Purpose: Identify the alarm that triggered the incident
+
+3. **Incident → Corrective Actions**
+   - Join: `incidents.incident_id = corrective_actions.incident_id`
+   - Purpose: View all remediation actions taken for the incident
+
+### Example Query (Pseudo-SQL)
+
+```sql
+-- View incident with machine state history and corrective actions
+SELECT
+    i.incident_id,
+    i.severity_level,
+    i.logged_at,
+    mse.previous_state,
+    mse.new_state,
+    mse.interlock_status,
+    ca.action_taken,
+    ca.status,
+    ca.verified_at
+FROM incidents i
+LEFT JOIN machine_state_events mse
+    ON i.machine_id = mse.machine_id
+    AND mse.timestamp <= i.logged_at
+LEFT JOIN corrective_actions ca
+    ON i.incident_id = ca.incident_id
+WHERE i.incident_id = 'INC-2026-000001'
+ORDER BY mse.timestamp DESC, ca.action_id;
+```
+
+**Note:** For incidents with MISSING_CONTEXT anomaly (alarm_event_id is null), the triggering alarm cannot be traced.
 
 ## Ground Truth
 
@@ -302,6 +355,8 @@ The `validation_report.json` file contains:
 - Structural errors (if any)
 - Expected and detected anomaly counts
 - Ground truth reconciliation metrics
+- Nuisance alarm cluster metrics (cluster count, affected machines, cluster details)
+- Incident traceability validation (incidents with machine state history, corrective actions, triggering alarms)
 - Overall validation status
 
 **Status Codes:**
@@ -330,6 +385,8 @@ This verifies that two independent generations produce identical files.
 
 ## Output Files
 
+Total: 15 files (11 operational CSVs + 3 metadata + 1 SQL)
+
 ### Operational CSVs (11 files)
 - plants.csv
 - machines.csv
@@ -343,10 +400,13 @@ This verifies that two independent generations produce identical files.
 - incidents.csv
 - corrective_actions.csv
 
-### Metadata Files (2 files)
+### Metadata Files (3 files)
 - ground_truth.csv - Anomaly labels
 - validation_report.json - Validation results
 - manifest.json - File metadata and checksums
+
+### SQL Export (1 file)
+- seed_data.sql - SQL seed data with CREATE TABLE and INSERT statements
 
 ### CSV Format Specifications
 - Encoding: UTF-8
@@ -377,12 +437,13 @@ This verifies that two independent generations produce identical files.
 - Simulation window: 30 days starting 2026-01-01
 
 ### Limitations
-- No external database integration (CSV-only export)
+- No external database integration (CSV and SQL export only, no direct database connection)
 - No frontend or visualization
 - No LLM or external data sources
 - Replay flood fixed at 50 records (not configurable)
 - Validation does not repair injected anomalies
 - Reproducibility not guaranteed across different dependency versions
+- SQL export uses generic SQL syntax compatible with PostgreSQL, MySQL, and similar databases
 
 ## Testing
 

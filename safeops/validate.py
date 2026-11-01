@@ -6,7 +6,7 @@ This module validates structural integrity, business rules, and ground truth.
 
 import pandas as pd
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Any
 from safeops.config import (
     get_profile,
@@ -98,6 +98,14 @@ def validate(
     # 4. Ground truth reconciliation
     reconciliation = _reconcile_ground_truth(ground_truth, detected_anomalies, data)
     report["ground_truth_reconciliation"] = reconciliation
+
+    # 5. Nuisance alarm cluster metrics (not an anomaly, but operational insight)
+    if "NUISANCE_ALARM_CLUSTERS" in detected_anomalies:
+        report["nuisance_alarm_clusters"] = detected_anomalies["NUISANCE_ALARM_CLUSTERS"]
+
+    # 6. Incident traceability validation
+    traceability_check = _validate_incident_traceability(data)
+    report["incident_traceability"] = traceability_check
 
     # 5. Expected anomalies from ground truth
     if len(ground_truth) > 0:
@@ -848,6 +856,89 @@ def _validate_corrective_actions(df: pd.DataFrame, incidents: pd.DataFrame) -> L
     return errors
 
 
+def _detect_nuisance_alarm_clusters(data: Dict[str, pd.DataFrame]) -> Dict:
+    """
+    Detect nuisance alarm clusters using operational data.
+
+    Rule: A nuisance alarm cluster is defined as 5 or more Low or Medium severity alarms
+    from the same machine occurring within a 10-minute window.
+
+    Returns dictionary with cluster count and affected machines.
+    """
+    if "alarm_events" not in data or "alarm_definitions" not in data:
+        return {"cluster_count": 0, "affected_machines": []}
+
+    alarm_events = data["alarm_events"]
+    alarm_definitions = data["alarm_definitions"]
+
+    # Create lookup: alarm_def_id -> (severity, machine_id)
+    def_lookup = dict(zip(
+        alarm_definitions["alarm_def_id"],
+        zip(alarm_definitions["severity"], alarm_definitions["machine_id"])
+    ))
+
+    # Filter for Low and Medium severity alarms
+    low_medium_alarms = []
+    for _, event in alarm_events.iterrows():
+        alarm_def_id = event["alarm_def_id"]
+        if alarm_def_id in def_lookup:
+            severity, machine_id = def_lookup[alarm_def_id]
+            if severity in ["Low", "Medium"]:
+                timestamp = datetime.fromisoformat(event["timestamp"].replace("Z", "+00:00"))
+                low_medium_alarms.append({
+                    "machine_id": machine_id,
+                    "timestamp": timestamp,
+                    "alarm_event_id": event["alarm_event_id"]
+                })
+
+    if len(low_medium_alarms) == 0:
+        return {"cluster_count": 0, "affected_machines": []}
+
+    # Convert to DataFrame for easier processing
+    alarm_df = pd.DataFrame(low_medium_alarms)
+
+    # Group by machine_id
+    clusters = []
+    affected_machines = set()
+
+    for machine_id, machine_alarms in alarm_df.groupby("machine_id"):
+        machine_alarms = machine_alarms.sort_values("timestamp").reset_index(drop=True)
+
+        # Sliding window: check for 5+ alarms within 10 minutes
+        window_size_minutes = 10
+        min_alarms_in_cluster = 5
+
+        for i in range(len(machine_alarms)):
+            window_start = machine_alarms.iloc[i]["timestamp"]
+            window_end = window_start + timedelta(minutes=window_size_minutes)
+
+            # Count alarms in window
+            alarms_in_window = machine_alarms[
+                (machine_alarms["timestamp"] >= window_start) &
+                (machine_alarms["timestamp"] <= window_end)
+            ]
+
+            if len(alarms_in_window) >= min_alarms_in_cluster:
+                # Found a cluster
+                cluster_id = f"NUISANCE-{machine_id}-{i:04d}"
+                clusters.append({
+                    "cluster_id": cluster_id,
+                    "machine_id": machine_id,
+                    "alarm_count": len(alarms_in_window),
+                    "start_time": window_start.strftime(TIMESTAMP_FORMAT),
+                    "end_time": window_end.strftime(TIMESTAMP_FORMAT)
+                })
+                affected_machines.add(machine_id)
+                # Skip ahead to avoid overlapping clusters
+                i += min_alarms_in_cluster - 1
+
+    return {
+        "cluster_count": len(clusters),
+        "affected_machines": sorted(list(affected_machines)),
+        "clusters": clusters
+    }
+
+
 def _detect_anomalies(data: Dict[str, pd.DataFrame], ground_truth: pd.DataFrame) -> Dict[str, List[str]]:
     """
     Detect anomalies independently from ground truth.
@@ -861,6 +952,9 @@ def _detect_anomalies(data: Dict[str, pd.DataFrame], ground_truth: pd.DataFrame)
         "REPLAY_FLOOD": [],
         "UNVERIFIED_CLOSURE": []
     }
+
+    # Also detect nuisance alarm clusters (not an anomaly, but a metric)
+    detected["NUISANCE_ALARM_CLUSTERS"] = _detect_nuisance_alarm_clusters(data)
 
     # Detect ACK_BEFORE_ALARM
     if "acknowledgements" in data and "alarm_events" in data:
@@ -891,14 +985,33 @@ def _detect_anomalies(data: Dict[str, pd.DataFrame], ground_truth: pd.DataFrame)
                 detected["MISSING_CONTEXT"].append(incident["incident_id"])
 
     # Detect REPLAY_FLOOD
-    # Only count the actual replay records (duplicates), not the originals that got replay_group_id
-    if "alarm_events" in data and len(ground_truth) > 0:
+    # Detect independently from operational data: identify records with replay_group_id
+    # Rule: Records with replay_group_id are part of a replay attack simulation
+    # Both original and replay have replay_group_id, but replay has higher counter
+    # Detection: For each (replay_group_id, machine_id), the N records with highest counters are replays
+    # (where N = number of pairs for that machine in the replay group)
+    if "alarm_events" in data:
         alarm_events = data["alarm_events"]
-        replay_gt = ground_truth[ground_truth["anomaly_type"] == "REPLAY_FLOOD"]
-        replay_ids = set(replay_gt["entity_id"])
-        for _, event in alarm_events.iterrows():
-            if event["alarm_event_id"] in replay_ids:
-                detected["REPLAY_FLOOD"].append(event["alarm_event_id"])
+        # Find all alarm events with non-null replay_group_id
+        replay_grouped = alarm_events[alarm_events["replay_group_id"].notna()]
+        if len(replay_grouped) > 0:
+            # Extract machine_id and numeric counter from alarm_event_id
+            # Format: ALM-MCH-XXX-XXXXXX
+            replay_grouped = replay_grouped.copy()
+            replay_grouped["machine_id"] = replay_grouped["alarm_event_id"].str.split("-").str[1] + "-" + replay_grouped["alarm_event_id"].str.split("-").str[2]
+            replay_grouped["counter"] = replay_grouped["alarm_event_id"].str.split("-").str[-1].astype(int)
+
+            # Group by (replay_group_id, machine_id) to find original-replay pairs
+            for (replay_group_id, machine_id), group in replay_grouped.groupby(["replay_group_id", "machine_id"]):
+                if len(group) >= 2:
+                    # Sort by counter
+                    group_sorted = group.sort_values("counter")
+                    # For each machine, half the records are originals (lower counters), half are replays (higher counters)
+                    # Take the upper half as replays
+                    num_pairs = len(group_sorted) // 2
+                    replay_records = group_sorted.iloc[-num_pairs:]
+                    for _, replay_record in replay_records.iterrows():
+                        detected["REPLAY_FLOOD"].append(replay_record["alarm_event_id"])
 
     # Detect UNVERIFIED_CLOSURE
     if "corrective_actions" in data:
@@ -937,3 +1050,66 @@ def _reconcile_ground_truth(
         }
 
     return reconciliation
+
+
+def _validate_incident_traceability(data: Dict[str, pd.DataFrame]) -> Dict:
+    """
+    Validate that incidents can be traced to machine state history and corrective actions.
+
+    Returns traceability validation results.
+    """
+    traceability = {
+        "status": "pass",
+        "incidents_with_machine_state_history": 0,
+        "incidents_with_corrective_actions": 0,
+        "incidents_with_triggering_alarm": 0,
+        "total_incidents": 0,
+        "errors": []
+    }
+
+    if "incidents" not in data:
+        traceability["status"] = "fail"
+        traceability["errors"].append("incidents table not found")
+        return traceability
+
+    incidents = data["incidents"]
+    traceability["total_incidents"] = len(incidents)
+
+    # Check machine state history traceability
+    if "machine_state_events" in data:
+        machine_state_events = data["machine_state_events"]
+        machine_ids = set(machine_state_events["machine_id"])
+        # Count incidents whose machine_id exists in machine_state_events
+        incidents_with_history = incidents[incidents["machine_id"].isin(machine_ids)]
+        traceability["incidents_with_machine_state_history"] = len(incidents_with_history)
+    else:
+        traceability["errors"].append("machine_state_events table not found")
+
+    # Check corrective actions traceability
+    if "corrective_actions" in data:
+        corrective_actions = data["corrective_actions"]
+        incident_ids = set(corrective_actions["incident_id"])
+        # Count incidents that have corrective actions
+        incidents_with_actions = incidents[incidents["incident_id"].isin(incident_ids)]
+        traceability["incidents_with_corrective_actions"] = len(incidents_with_actions)
+    else:
+        traceability["errors"].append("corrective_actions table not found")
+
+    # Check triggering alarm traceability (excluding MISSING_CONTEXT anomalies)
+    if "alarm_events" in data:
+        alarm_events = data["alarm_events"]
+        alarm_event_ids = set(alarm_events["alarm_event_id"])
+        # Count incidents with valid alarm_event_id that exists in alarm_events
+        incidents_with_alarm = incidents[
+            incidents["alarm_event_id"].notna() &
+            incidents["alarm_event_id"].isin(alarm_event_ids)
+        ]
+        traceability["incidents_with_triggering_alarm"] = len(incidents_with_alarm)
+    else:
+        traceability["errors"].append("alarm_events table not found")
+
+    # Determine overall status
+    if len(traceability["errors"]) > 0:
+        traceability["status"] = "fail"
+
+    return traceability

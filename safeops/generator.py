@@ -32,6 +32,7 @@ from safeops.config import (
 from safeops.utils.master_gen import generate_master_data
 from safeops.utils.event_engine import generate_events
 from safeops.utils.anomaly_injector import inject_anomalies
+from safeops.utils.sql_export import export_sql
 from safeops.validate import validate
 
 
@@ -131,6 +132,10 @@ def generate_pipeline(profile: str, seed: int, output_dir: Path, rng: np.random.
     print("Exporting CSV files...")
     export_csvs(all_data, ground_truth, output_dir)
 
+    # 5.5. Export SQL seed data
+    print("Exporting SQL seed data...")
+    export_sql(all_data, output_dir)
+
     # 6. Export validation report
     print("Exporting validation report...")
     validation_path = output_dir / "validation_report.json"
@@ -146,7 +151,7 @@ def generate_pipeline(profile: str, seed: int, output_dir: Path, rng: np.random.
     with open(manifest_path, 'w', encoding='utf-8') as f:
         json.dump(manifest, f, indent=2)
 
-    print(f"\nExported {len(all_data) + 2} files to {output_dir.absolute()}")
+    print(f"\nExported {len(all_data) + 4} files to {output_dir.absolute()}")
 
 
 def export_csvs(data: Dict[str, pd.DataFrame], ground_truth: pd.DataFrame, output_dir: Path):

@@ -191,3 +191,71 @@ class TestValidationReport:
             assert report["structural_integrity"] == "pass"
             assert "expected_anomalies" in report
             assert "detected_anomalies" in report
+
+
+class TestSQLExport:
+    """Test SQL export functionality."""
+
+    def test_sql_file_generated(self):
+        """Verify seed_data.sql is generated."""
+        rng = init_rng()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir) / "output"
+            generate_pipeline("dev", 20261022, output_dir, rng)
+
+            assert (output_dir / "seed_data.sql").exists()
+
+    def test_sql_contains_create_tables(self):
+        """Verify SQL file contains CREATE TABLE statements."""
+        rng = init_rng()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir) / "output"
+            generate_pipeline("dev", 20261022, output_dir, rng)
+
+            sql_content = (output_dir / "seed_data.sql").read_text()
+
+            # Check for CREATE TABLE statements
+            assert "CREATE TABLE plants" in sql_content
+            assert "CREATE TABLE machines" in sql_content
+            assert "CREATE TABLE safety_zones" in sql_content
+            assert "CREATE TABLE interlocks" in sql_content
+            assert "CREATE TABLE alarm_definitions" in sql_content
+            assert "CREATE TABLE operator_shifts" in sql_content
+            assert "CREATE TABLE machine_state_events" in sql_content
+            assert "CREATE TABLE alarm_events" in sql_content
+            assert "CREATE TABLE acknowledgements" in sql_content
+            assert "CREATE TABLE incidents" in sql_content
+            assert "CREATE TABLE corrective_actions" in sql_content
+
+    def test_sql_contains_foreign_keys(self):
+        """Verify SQL file contains FOREIGN KEY constraints."""
+        rng = init_rng()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir) / "output"
+            generate_pipeline("dev", 20261022, output_dir, rng)
+
+            sql_content = (output_dir / "seed_data.sql").read_text()
+
+            # Check for FOREIGN KEY constraints
+            assert "FOREIGN KEY" in sql_content
+            assert "REFERENCES plants(plant_id)" in sql_content
+            assert "REFERENCES machines(machine_id)" in sql_content
+            assert "REFERENCES alarm_definitions(alarm_def_id)" in sql_content
+            assert "REFERENCES alarm_events(alarm_event_id)" in sql_content
+            assert "REFERENCES operator_shifts(shift_id)" in sql_content
+            assert "REFERENCES incidents(incident_id)" in sql_content
+
+    def test_sql_contains_insert_statements(self):
+        """Verify SQL file contains INSERT statements."""
+        rng = init_rng()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir) / "output"
+            generate_pipeline("dev", 20261022, output_dir, rng)
+
+            sql_content = (output_dir / "seed_data.sql").read_text()
+
+            # Check for INSERT statements
+            assert "INSERT INTO plants" in sql_content
+            assert "INSERT INTO machines" in sql_content
+            assert "INSERT INTO alarm_events" in sql_content
+            assert "INSERT INTO corrective_actions" in sql_content
