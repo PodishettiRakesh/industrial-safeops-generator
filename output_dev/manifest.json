@@ -106,14 +106,14 @@
       "sha256": "240d0a942e12bde4e8bb8c775238c90853afcbc56e040714f6b27764df5145dd"
     },
     {
-      "name": "manifest.json",
-      "size": 3219,
-      "sha256": "713e77952d0128a55b203d453aebc7732acf60084a881aee145577b238133605"
-    },
-    {
       "name": "validation_report.json",
       "size": 4001,
       "sha256": "37802e524c9c72b3ef32686c718b2ec16b3962cbe28fea60fe2350a8cab04a3e"
+    },
+    {
+      "name": "seed_data.sql",
+      "size": 183140,
+      "sha256": "e6258022079fb4427177a46257ac95143f4e3d6cc5bf1bb354001f92e6940315"
     }
   ]
 }

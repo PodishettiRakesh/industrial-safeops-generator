@@ -246,9 +246,13 @@ def generate_manifest(
 
     # File info and checksums
     files = []
-    csv_files = list(output_dir.glob("*.csv")) + list(output_dir.glob("*.json"))
+    # Include CSV, JSON, and SQL files, but exclude manifest.json itself
+    csv_files = list(output_dir.glob("*.csv")) + list(output_dir.glob("*.json")) + list(output_dir.glob("*.sql"))
 
     for filepath in csv_files:
+        # Skip manifest.json to avoid self-referential checksum
+        if filepath.name == "manifest.json":
+            continue
         file_bytes = filepath.read_bytes()
         checksum = hashlib.sha256(file_bytes).hexdigest()
         files.append({

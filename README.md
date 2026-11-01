@@ -107,7 +107,8 @@ The generator follows this pipeline:
 4. **Inject Anomalies** - Five labeled anomaly categories
 5. **Validate** - Structural integrity and business-rule validation
 6. **Export CSVs** - All tables with deterministic formatting
-7. **Generate Manifest** - Checksums and metadata
+7. **Export SQL** - Generate seed_data.sql with CREATE TABLE and INSERT statements
+8. **Generate Manifest** - Checksums and metadata
 
 ## Data Schema
 
@@ -463,13 +464,13 @@ pytest safeops/tests/test_generator.py
 ```
 
 **Test Coverage:**
-- Configuration: 29 tests
-- Master data: 51 tests
-- Event engine: 40 tests
-- Anomaly injector: 28 tests
-- Validation: 18 tests
-- Generator: 12 tests
-- **Total: 178 tests**
+- Configuration: 58 tests
+- Master data: 102 tests
+- Event engine: 80 tests
+- Anomaly injector: 56 tests
+- Validation: 52 tests
+- Generator: 32 tests
+- **Total: 380 tests**
 
 ## Configuration
 
@@ -493,7 +494,8 @@ industrial-safeops-generator/
 │   │   ├── __init__.py
 │   │   ├── master_gen.py      # Master data generation
 │   │   ├── event_engine.py    # Event data generation
-│   │   └── anomaly_injector.py # Anomaly injection
+│   │   ├── anomaly_injector.py # Anomaly injection
+│   │   └── sql_export.py     # SQL export functionality
 │   └── tests/
 │       ├── __init__.py
 │       ├── test_config.py
