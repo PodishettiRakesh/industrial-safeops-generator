@@ -333,13 +333,13 @@ def verify_reproducibility(profile: str, seed: int) -> bool:
                 print(f"  ERROR: File content mismatch: {f1.name}")
                 all_match = False
             else:
-                print(f"  ✓ {f1.name}")
+                print(f"  OK {f1.name}")
 
         if all_match:
-            print("\n✓ Reproducibility verification PASSED")
+            print("\n[OK] Reproducibility verification PASSED")
             return True
         else:
-            print("\n✗ Reproducibility verification FAILED")
+            print("\n[FAIL] Reproducibility verification FAILED")
             return False
 
     finally:
