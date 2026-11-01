@@ -1,0 +1,163 @@
+action_id,incident_id,action_taken,status,verified_at
+ACT-INC-2026-000001-01,INC-2026-000001,Replace worn component,Closed,2026-01-03T21:22:22Z
+ACT-INC-2026-000002-01,INC-2026-000002,Update control software,Closed,2026-01-02T12:28:39Z
+ACT-INC-2026-000003-01,INC-2026-000003,Repair electrical connection,In_Progress,
+ACT-INC-2026-000004-01,INC-2026-000004,Adjust parameter settings,Open,
+ACT-INC-2026-000004-02,INC-2026-000004,Adjust parameter settings,Open,
+ACT-INC-2026-000004-03,INC-2026-000004,Repair electrical connection,In_Progress,
+ACT-INC-2026-000005-01,INC-2026-000005,Repair electrical connection,Closed,2026-01-03T09:05:09Z
+ACT-INC-2026-000005-02,INC-2026-000005,Replace worn component,Open,
+ACT-INC-2026-000006-01,INC-2026-000006,Update control software,Open,
+ACT-INC-2026-000007-01,INC-2026-000007,Replace worn component,Open,
+ACT-INC-2026-000007-02,INC-2026-000007,Recalibrate instrumentation,In_Progress,
+ACT-INC-2026-000007-03,INC-2026-000007,Recalibrate instrumentation,In_Progress,
+ACT-INC-2026-000008-01,INC-2026-000008,Replace worn component,Closed,2026-01-04T15:20:50Z
+ACT-INC-2026-000008-02,INC-2026-000008,Repair electrical connection,Open,
+ACT-INC-2026-000008-03,INC-2026-000008,Adjust parameter settings,Open,
+ACT-INC-2026-000009-01,INC-2026-000009,Repair electrical connection,In_Progress,
+ACT-INC-2026-000010-01,INC-2026-000010,Perform maintenance inspection,Closed,2026-01-05T23:37:18Z
+ACT-INC-2026-000010-02,INC-2026-000010,Clean sensor housing,Open,
+ACT-INC-2026-000011-01,INC-2026-000011,Update control software,Closed,2026-01-04T20:47:08Z
+ACT-INC-2026-000011-02,INC-2026-000011,Update control software,In_Progress,
+ACT-INC-2026-000012-01,INC-2026-000012,Clean sensor housing,Open,
+ACT-INC-2026-000012-02,INC-2026-000012,Reset safety interlock,Open,
+ACT-INC-2026-000012-03,INC-2026-000012,Clean sensor housing,In_Progress,
+ACT-INC-2026-000013-01,INC-2026-000013,Repair electrical connection,Closed,2026-01-06T13:13:46Z
+ACT-INC-2026-000013-02,INC-2026-000013,Reset safety interlock,Closed,2026-01-06T06:13:46Z
+ACT-INC-2026-000013-03,INC-2026-000013,Perform maintenance inspection,Open,
+ACT-INC-2026-000014-01,INC-2026-000014,Update control software,Closed,2026-01-06T21:36:56Z
+ACT-INC-2026-000015-01,INC-2026-000015,Update control software,Closed,2026-01-06T23:11:57Z
+ACT-INC-2026-000015-02,INC-2026-000015,Adjust parameter settings,In_Progress,
+ACT-INC-2026-000015-03,INC-2026-000015,Perform maintenance inspection,Closed,2026-01-06T01:11:57Z
+ACT-INC-2026-000016-01,INC-2026-000016,Recalibrate instrumentation,Open,
+ACT-INC-2026-000017-01,INC-2026-000017,Recalibrate instrumentation,Open,
+ACT-INC-2026-000017-02,INC-2026-000017,Reset safety interlock,In_Progress,
+ACT-INC-2026-000018-01,INC-2026-000018,Replace worn component,Open,
+ACT-INC-2026-000018-02,INC-2026-000018,Reset safety interlock,Open,
+ACT-INC-2026-000018-03,INC-2026-000018,Update control software,Closed,2026-01-07T06:26:32Z
+ACT-INC-2026-000019-01,INC-2026-000019,Reset safety interlock,Open,
+ACT-INC-2026-000019-02,INC-2026-000019,Reset safety interlock,In_Progress,
+ACT-INC-2026-000019-03,INC-2026-000019,Clean sensor housing,In_Progress,
+ACT-INC-2026-000020-01,INC-2026-000020,Update control software,Open,
+ACT-INC-2026-000021-01,INC-2026-000021,Adjust parameter settings,Closed,2026-01-07T16:12:01Z
+ACT-INC-2026-000021-02,INC-2026-000021,Repair electrical connection,Closed,2026-01-07T23:12:01Z
+ACT-INC-2026-000022-01,INC-2026-000022,Clean sensor housing,Closed,2026-01-07T02:46:16Z
+ACT-INC-2026-000022-02,INC-2026-000022,Recalibrate instrumentation,In_Progress,
+ACT-INC-2026-000023-01,INC-2026-000023,Reset safety interlock,Closed,2026-01-07T13:22:54Z
+ACT-INC-2026-000023-02,INC-2026-000023,Update control software,In_Progress,
+ACT-INC-2026-000024-01,INC-2026-000024,Adjust parameter settings,In_Progress,
+ACT-INC-2026-000025-01,INC-2026-000025,Reset safety interlock,Open,
+ACT-INC-2026-000025-02,INC-2026-000025,Clean sensor housing,Open,
+ACT-INC-2026-000026-01,INC-2026-000026,Clean sensor housing,Closed,2026-01-09T09:48:27Z
+ACT-INC-2026-000027-01,INC-2026-000027,Perform maintenance inspection,In_Progress,
+ACT-INC-2026-000028-01,INC-2026-000028,Reset safety interlock,In_Progress,
+ACT-INC-2026-000029-01,INC-2026-000029,Replace worn component,In_Progress,
+ACT-INC-2026-000029-02,INC-2026-000029,Adjust parameter settings,In_Progress,
+ACT-INC-2026-000029-03,INC-2026-000029,Replace worn component,In_Progress,
+ACT-INC-2026-000030-01,INC-2026-000030,Adjust parameter settings,Open,
+ACT-INC-2026-000031-01,INC-2026-000031,Update control software,Open,
+ACT-INC-2026-000032-01,INC-2026-000032,Recalibrate instrumentation,Closed,2026-01-09T19:57:26Z
+ACT-INC-2026-000032-02,INC-2026-000032,Recalibrate instrumentation,In_Progress,
+ACT-INC-2026-000033-01,INC-2026-000033,Replace worn component,In_Progress,
+ACT-INC-2026-000033-02,INC-2026-000033,Repair electrical connection,Open,
+ACT-INC-2026-000034-01,INC-2026-000034,Reset safety interlock,In_Progress,
+ACT-INC-2026-000034-02,INC-2026-000034,Adjust parameter settings,Open,
+ACT-INC-2026-000034-03,INC-2026-000034,Update control software,Open,
+ACT-INC-2026-000035-01,INC-2026-000035,Clean sensor housing,Closed,2026-01-12T10:49:59Z
+ACT-INC-2026-000036-01,INC-2026-000036,Clean sensor housing,In_Progress,
+ACT-INC-2026-000036-02,INC-2026-000036,Repair electrical connection,Open,
+ACT-INC-2026-000036-03,INC-2026-000036,Perform maintenance inspection,In_Progress,
+ACT-INC-2026-000037-01,INC-2026-000037,Replace worn component,Closed,2026-01-11T14:57:26Z
+ACT-INC-2026-000037-02,INC-2026-000037,Perform maintenance inspection,Open,
+ACT-INC-2026-000038-01,INC-2026-000038,Update control software,Open,
+ACT-INC-2026-000038-02,INC-2026-000038,Clean sensor housing,Closed,2026-01-12T14:44:29Z
+ACT-INC-2026-000038-03,INC-2026-000038,Reset safety interlock,In_Progress,
+ACT-INC-2026-000039-01,INC-2026-000039,Recalibrate instrumentation,Closed,2026-01-12T09:13:37Z
+ACT-INC-2026-000039-02,INC-2026-000039,Replace worn component,Open,
+ACT-INC-2026-000040-01,INC-2026-000040,Repair electrical connection,In_Progress,
+ACT-INC-2026-000040-02,INC-2026-000040,Perform maintenance inspection,Open,
+ACT-INC-2026-000041-01,INC-2026-000041,Perform maintenance inspection,Open,
+ACT-INC-2026-000042-01,INC-2026-000042,Repair electrical connection,Closed,2026-01-14T03:46:23Z
+ACT-INC-2026-000042-02,INC-2026-000042,Replace worn component,Closed,2026-01-13T16:46:23Z
+ACT-INC-2026-000043-01,INC-2026-000043,Perform maintenance inspection,In_Progress,
+ACT-INC-2026-000044-01,INC-2026-000044,Replace worn component,In_Progress,
+ACT-INC-2026-000044-02,INC-2026-000044,Recalibrate instrumentation,Open,
+ACT-INC-2026-000044-03,INC-2026-000044,Clean sensor housing,In_Progress,
+ACT-INC-2026-000045-01,INC-2026-000045,Adjust parameter settings,Closed,2026-01-15T00:15:36Z
+ACT-INC-2026-000046-01,INC-2026-000046,Repair electrical connection,Closed,2026-01-15T08:16:22Z
+ACT-INC-2026-000046-02,INC-2026-000046,Replace worn component,Open,
+ACT-INC-2026-000047-01,INC-2026-000047,Clean sensor housing,In_Progress,
+ACT-INC-2026-000047-02,INC-2026-000047,Recalibrate instrumentation,Open,
+ACT-INC-2026-000048-01,INC-2026-000048,Perform maintenance inspection,Open,
+ACT-INC-2026-000048-02,INC-2026-000048,Recalibrate instrumentation,Closed,2026-01-15T02:59:30Z
+ACT-INC-2026-000048-03,INC-2026-000048,Adjust parameter settings,Closed,2026-01-15T15:59:30Z
+ACT-INC-2026-000049-01,INC-2026-000049,Adjust parameter settings,Open,
+ACT-INC-2026-000050-01,INC-2026-000050,Adjust parameter settings,In_Progress,
+ACT-INC-2026-000050-02,INC-2026-000050,Clean sensor housing,Closed,2026-01-17T21:19:36Z
+ACT-INC-2026-000051-01,INC-2026-000051,Replace worn component,In_Progress,
+ACT-INC-2026-000051-02,INC-2026-000051,Recalibrate instrumentation,Closed,2026-01-16T13:07:45Z
+ACT-INC-2026-000052-01,INC-2026-000052,Clean sensor housing,Open,
+ACT-INC-2026-000053-01,INC-2026-000053,Clean sensor housing,Open,
+ACT-INC-2026-000053-02,INC-2026-000053,Update control software,Closed,2026-01-17T15:33:12Z
+ACT-INC-2026-000054-01,INC-2026-000054,Reset safety interlock,In_Progress,
+ACT-INC-2026-000055-01,INC-2026-000055,Perform maintenance inspection,Open,
+ACT-INC-2026-000055-02,INC-2026-000055,Repair electrical connection,Closed,2026-01-18T23:39:56Z
+ACT-INC-2026-000056-01,INC-2026-000056,Recalibrate instrumentation,Open,
+ACT-INC-2026-000056-02,INC-2026-000056,Reset safety interlock,Open,
+ACT-INC-2026-000056-03,INC-2026-000056,Update control software,Closed,2026-01-21T06:32:03Z
+ACT-INC-2026-000057-01,INC-2026-000057,Replace worn component,Open,
+ACT-INC-2026-000057-02,INC-2026-000057,Update control software,Closed,2026-01-21T03:48:41Z
+ACT-INC-2026-000058-01,INC-2026-000058,Perform maintenance inspection,Closed,2026-01-21T02:36:47Z
+ACT-INC-2026-000058-02,INC-2026-000058,Perform maintenance inspection,Open,
+ACT-INC-2026-000059-01,INC-2026-000059,Adjust parameter settings,Open,
+ACT-INC-2026-000060-01,INC-2026-000060,Update control software,In_Progress,
+ACT-INC-2026-000060-02,INC-2026-000060,Perform maintenance inspection,Closed,2026-01-21T07:13:54Z
+ACT-INC-2026-000061-01,INC-2026-000061,Adjust parameter settings,Closed,2026-01-21T13:10:09Z
+ACT-INC-2026-000062-01,INC-2026-000062,Reset safety interlock,In_Progress,
+ACT-INC-2026-000063-01,INC-2026-000063,Adjust parameter settings,Closed,2026-01-21T11:03:00Z
+ACT-INC-2026-000064-01,INC-2026-000064,Reset safety interlock,Closed,2026-01-21T15:36:25Z
+ACT-INC-2026-000064-02,INC-2026-000064,Update control software,Closed,2026-01-21T15:36:25Z
+ACT-INC-2026-000064-03,INC-2026-000064,Update control software,In_Progress,
+ACT-INC-2026-000065-01,INC-2026-000065,Update control software,In_Progress,
+ACT-INC-2026-000065-02,INC-2026-000065,Reset safety interlock,In_Progress,
+ACT-INC-2026-000065-03,INC-2026-000065,Adjust parameter settings,Open,
+ACT-INC-2026-000066-01,INC-2026-000066,Update control software,Closed,2026-01-22T13:24:27Z
+ACT-INC-2026-000066-02,INC-2026-000066,Replace worn component,In_Progress,
+ACT-INC-2026-000067-01,INC-2026-000067,Adjust parameter settings,Open,
+ACT-INC-2026-000068-01,INC-2026-000068,Clean sensor housing,Open,
+ACT-INC-2026-000068-02,INC-2026-000068,Replace worn component,Closed,2026-01-25T06:53:58Z
+ACT-INC-2026-000068-03,INC-2026-000068,Adjust parameter settings,Closed,2026-01-23T13:53:58Z
+ACT-INC-2026-000069-01,INC-2026-000069,Reset safety interlock,Closed,2026-01-25T06:14:49Z
+ACT-INC-2026-000070-01,INC-2026-000070,Repair electrical connection,Closed,2026-01-23T18:43:32Z
+ACT-INC-2026-000070-02,INC-2026-000070,Adjust parameter settings,Open,
+ACT-INC-2026-000071-01,INC-2026-000071,Adjust parameter settings,Closed,2026-01-25T11:01:55Z
+ACT-INC-2026-000072-01,INC-2026-000072,Perform maintenance inspection,Closed,2026-01-26T02:55:06Z
+ACT-INC-2026-000072-02,INC-2026-000072,Clean sensor housing,Open,
+ACT-INC-2026-000072-03,INC-2026-000072,Perform maintenance inspection,In_Progress,
+ACT-INC-2026-000073-01,INC-2026-000073,Perform maintenance inspection,Open,
+ACT-INC-2026-000074-01,INC-2026-000074,Reset safety interlock,In_Progress,
+ACT-INC-2026-000074-02,INC-2026-000074,Perform maintenance inspection,Closed,2026-01-26T04:24:08Z
+ACT-INC-2026-000075-01,INC-2026-000075,Perform maintenance inspection,Closed,2026-01-26T21:59:35Z
+ACT-INC-2026-000075-02,INC-2026-000075,Replace worn component,In_Progress,
+ACT-INC-2026-000075-03,INC-2026-000075,Repair electrical connection,Open,
+ACT-INC-2026-000076-01,INC-2026-000076,Adjust parameter settings,Open,
+ACT-INC-2026-000076-02,INC-2026-000076,Adjust parameter settings,In_Progress,
+ACT-INC-2026-000076-03,INC-2026-000076,Perform maintenance inspection,In_Progress,
+ACT-INC-2026-000077-01,INC-2026-000077,Replace worn component,Closed,2026-01-27T09:34:39Z
+ACT-INC-2026-000077-02,INC-2026-000077,Replace worn component,Closed,2026-01-25T18:34:39Z
+ACT-INC-2026-000078-01,INC-2026-000078,Replace worn component,Closed,2026-01-28T04:50:52Z
+ACT-INC-2026-000078-02,INC-2026-000078,Clean sensor housing,Closed,2026-01-28T09:50:52Z
+ACT-INC-2026-000079-01,INC-2026-000079,Reset safety interlock,Open,
+ACT-INC-2026-000080-01,INC-2026-000080,Adjust parameter settings,In_Progress,
+ACT-INC-2026-000080-02,INC-2026-000080,Recalibrate instrumentation,Closed,
+ACT-INC-2026-000080-03,INC-2026-000080,Adjust parameter settings,Closed,2026-01-28T22:12:42Z
+ACT-INC-2026-000081-01,INC-2026-000081,Reset safety interlock,Closed,2026-01-28T21:19:30Z
+ACT-INC-2026-000081-02,INC-2026-000081,Replace worn component,Open,
+ACT-INC-2026-000082-01,INC-2026-000082,Reset safety interlock,Closed,2026-01-28T14:42:17Z
+ACT-INC-2026-000082-02,INC-2026-000082,Update control software,Closed,2026-01-29T07:42:17Z
+ACT-INC-2026-000082-03,INC-2026-000082,Repair electrical connection,Open,
+ACT-INC-2026-000083-01,INC-2026-000083,Perform maintenance inspection,In_Progress,
+ACT-INC-2026-000083-02,INC-2026-000083,Perform maintenance inspection,In_Progress,
+ACT-INC-2026-000083-03,INC-2026-000083,Repair electrical connection,Open,
+ACT-INC-2026-000084-01,INC-2026-000084,Recalibrate instrumentation,Open,
+ACT-INC-2026-000084-02,INC-2026-000084,Clean sensor housing,In_Progress,

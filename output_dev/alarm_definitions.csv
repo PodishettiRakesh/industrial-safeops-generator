@@ -1,0 +1,11 @@
+alarm_def_id,machine_id,metric_name,severity,threshold_limit
+DEF-0001,MCH-001,Vibration,High,25.000000
+DEF-0002,MCH-003,Vibration,Medium,35.000000
+DEF-0003,MCH-001,Temperature,Low,137.000000
+DEF-0004,MCH-001,Temperature,Medium,111.000000
+DEF-0005,MCH-004,Temperature,Medium,111.000000
+DEF-0006,MCH-003,Voltage,Medium,369.000000
+DEF-0007,MCH-001,Temperature,Critical,59.000000
+DEF-0008,MCH-002,Pressure,Low,90.000000
+DEF-0009,MCH-003,Temperature,Low,137.000000
+DEF-0010,MCH-001,Temperature,Medium,111.000000

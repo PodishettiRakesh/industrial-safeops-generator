@@ -1,0 +1,153 @@
+{
+  "profile": "dev",
+  "expected_row_counts": {
+    "alarm_events": 500,
+    "machines": 5,
+    "plants": 2,
+    "alarm_definitions": 10
+  },
+  "actual_row_counts": {
+    "alarm_events": 500,
+    "machines": 5,
+    "plants": 2,
+    "alarm_definitions": 10
+  },
+  "structural_integrity": "pass",
+  "structural_errors": [],
+  "expected_anomalies": {
+    "REPLAY_FLOOD": 50,
+    "ACK_BEFORE_ALARM": 3,
+    "UNVERIFIED_CLOSURE": 1,
+    "MISSING_CONTEXT": 1,
+    "IMPOSSIBLE_INTERLOCK": 1
+  },
+  "detected_anomalies": {
+    "ACK_BEFORE_ALARM": [
+      "ACK-ALM-MCH-001-000116-01",
+      "ACK-ALM-MCH-001-000183-01",
+      "ACK-ALM-MCH-001-000037-01"
+    ],
+    "IMPOSSIBLE_INTERLOCK": [
+      "34"
+    ],
+    "MISSING_CONTEXT": [
+      "INC-2026-000032"
+    ],
+    "REPLAY_FLOOD": [
+      "ALM-MCH-001-000223",
+      "ALM-MCH-001-000224",
+      "ALM-MCH-001-000225",
+      "ALM-MCH-001-000226",
+      "ALM-MCH-001-000227",
+      "ALM-MCH-001-000228",
+      "ALM-MCH-001-000229",
+      "ALM-MCH-001-000230",
+      "ALM-MCH-001-000231",
+      "ALM-MCH-001-000232",
+      "ALM-MCH-001-000233",
+      "ALM-MCH-001-000234",
+      "ALM-MCH-001-000235",
+      "ALM-MCH-001-000236",
+      "ALM-MCH-001-000237",
+      "ALM-MCH-001-000238",
+      "ALM-MCH-001-000239",
+      "ALM-MCH-001-000240",
+      "ALM-MCH-001-000241",
+      "ALM-MCH-001-000242",
+      "ALM-MCH-001-000243",
+      "ALM-MCH-001-000244",
+      "ALM-MCH-001-000245",
+      "ALM-MCH-001-000246",
+      "ALM-MCH-002-000042",
+      "ALM-MCH-002-000043",
+      "ALM-MCH-003-000138",
+      "ALM-MCH-003-000139",
+      "ALM-MCH-003-000140",
+      "ALM-MCH-003-000141",
+      "ALM-MCH-003-000142",
+      "ALM-MCH-003-000143",
+      "ALM-MCH-003-000144",
+      "ALM-MCH-003-000145",
+      "ALM-MCH-003-000146",
+      "ALM-MCH-003-000147",
+      "ALM-MCH-003-000148",
+      "ALM-MCH-003-000149",
+      "ALM-MCH-003-000150",
+      "ALM-MCH-003-000151",
+      "ALM-MCH-003-000152",
+      "ALM-MCH-003-000153",
+      "ALM-MCH-003-000154",
+      "ALM-MCH-003-000155",
+      "ALM-MCH-003-000156",
+      "ALM-MCH-003-000157",
+      "ALM-MCH-003-000158",
+      "ALM-MCH-004-000051",
+      "ALM-MCH-004-000052",
+      "ALM-MCH-004-000053"
+    ],
+    "UNVERIFIED_CLOSURE": [
+      "ACT-INC-2026-000080-02"
+    ],
+    "NUISANCE_ALARM_CLUSTERS": {
+      "cluster_count": 0,
+      "affected_machines": [],
+      "clusters": []
+    }
+  },
+  "ground_truth_reconciliation": {
+    "ACK_BEFORE_ALARM": {
+      "ground_truth_count": 3,
+      "unique_affected_records": 3,
+      "detected_count": 3,
+      "matched_count": 3,
+      "missed_labels": 0,
+      "unlabelled_detections": 0
+    },
+    "IMPOSSIBLE_INTERLOCK": {
+      "ground_truth_count": 1,
+      "unique_affected_records": 1,
+      "detected_count": 1,
+      "matched_count": 1,
+      "missed_labels": 0,
+      "unlabelled_detections": 0
+    },
+    "MISSING_CONTEXT": {
+      "ground_truth_count": 1,
+      "unique_affected_records": 1,
+      "detected_count": 1,
+      "matched_count": 1,
+      "missed_labels": 0,
+      "unlabelled_detections": 0
+    },
+    "REPLAY_FLOOD": {
+      "ground_truth_count": 50,
+      "unique_affected_records": 50,
+      "detected_count": 50,
+      "matched_count": 50,
+      "missed_labels": 0,
+      "unlabelled_detections": 0
+    },
+    "UNVERIFIED_CLOSURE": {
+      "ground_truth_count": 1,
+      "unique_affected_records": 1,
+      "detected_count": 1,
+      "matched_count": 1,
+      "missed_labels": 0,
+      "unlabelled_detections": 0
+    }
+  },
+  "overall_status": "pass",
+  "nuisance_alarm_clusters": {
+    "cluster_count": 0,
+    "affected_machines": [],
+    "clusters": []
+  },
+  "incident_traceability": {
+    "status": "pass",
+    "incidents_with_machine_state_history": 84,
+    "incidents_with_corrective_actions": 84,
+    "incidents_with_triggering_alarm": 83,
+    "total_incidents": 84,
+    "errors": []
+  }
+}

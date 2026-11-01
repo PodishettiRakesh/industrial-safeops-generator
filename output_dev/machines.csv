@@ -1,0 +1,6 @@
+machine_id,plant_id,machine_type,model_number,status
+MCH-001,PLT-002,CNC_Mill,CNC-Mill-MK-001,Operational
+MCH-002,PLT-002,Robotic_Arm,Robotic-Arm-MK-002,Operational
+MCH-003,PLT-002,CNC_Mill,CNC-Mill-MK-003,Operational
+MCH-004,PLT-001,Robotic_Arm,Robotic-Arm-MK-004,Operational
+MCH-005,PLT-001,Stamping_Press,Stamping-Press-MK-005,Operational

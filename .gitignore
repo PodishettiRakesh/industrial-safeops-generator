@@ -1,4 +1,7 @@
 plan.md
+PHASE3_CORRECTIONS.md
+Phase2_summary.md
+phase3_summary.md
 
 # Python
 __pycache__/
@@ -47,8 +50,11 @@ htmlcov/
 
 # Output directories
 output/
-output_dev/
-output_*/
+# output_dev/
+# output_*/
+output_dev_verify/
+output_full/
+output_test_sql/
 
 # Environment files
 .env

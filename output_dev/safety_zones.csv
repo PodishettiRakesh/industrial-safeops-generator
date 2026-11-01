@@ -1,0 +1,14 @@
+zone_id,machine_id,zone_type,risk_level
+SAFE-PLT-001-001,MCH-004,Perimeter_Laser,Critical
+SAFE-PLT-001-002,MCH-004,Perimeter_Laser,Low
+SAFE-PLT-001-003,MCH-005,Perimeter_Laser,Critical
+SAFE-PLT-001-004,MCH-005,Perimeter_Laser,Medium
+SAFE-PLT-001-005,MCH-005,Proximity_Radar,Low
+SAFE-PLT-002-001,MCH-001,Pressure_Mat,Low
+SAFE-PLT-002-002,MCH-001,Perimeter_Laser,Medium
+SAFE-PLT-002-003,MCH-001,Pressure_Mat,High
+SAFE-PLT-002-004,MCH-002,Proximity_Radar,Low
+SAFE-PLT-002-005,MCH-002,Perimeter_Laser,Medium
+SAFE-PLT-002-006,MCH-002,Proximity_Radar,High
+SAFE-PLT-002-007,MCH-003,Proximity_Radar,High
+SAFE-PLT-002-008,MCH-003,Pressure_Mat,Critical

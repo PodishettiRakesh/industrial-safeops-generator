@@ -1,0 +1,119 @@
+{
+  "seed": 20261022,
+  "profile": "dev",
+  "simulation_start": "2026-01-01T00:00:00Z",
+  "simulation_end": "2026-01-31T00:00:00Z",
+  "expected_row_counts": {
+    "plants": 2,
+    "machines": 5,
+    "alarm_definitions": 10,
+    "alarm_events": 500
+  },
+  "actual_row_counts": {
+    "plants": 2,
+    "machines": 5,
+    "safety_zones": 13,
+    "interlocks": 17,
+    "alarm_definitions": 10,
+    "operator_shifts": 180,
+    "machine_state_events": 454,
+    "alarm_events": 500,
+    "acknowledgements": 360,
+    "incidents": 84,
+    "corrective_actions": 162,
+    "ground_truth": 56
+  },
+  "anomaly_counts": {
+    "anomaly_cases": 5,
+    "ground_truth_rows": 56,
+    "unique_affected_records": 56,
+    "added_replay_records": 50,
+    "affected_percentage_by_table": {
+      "acknowledgements": 0.83,
+      "alarm_events": 10.0,
+      "corrective_actions": 0.62,
+      "incidents": 1.19,
+      "machine_state_events": 0.22
+    }
+  },
+  "validation_status": "pass",
+  "generator_version": "1.0.0",
+  "python_version": "3.11.5",
+  "dependency_versions": {
+    "python": "3.11.5",
+    "pandas": "2.2.3",
+    "numpy": "2.1.3"
+  },
+  "files": [
+    {
+      "name": "acknowledgements.csv",
+      "size": 29207,
+      "sha256": "c21ff16b505819074d79d7ca5555087f354c08b21839d5e72fc8b7eb0a0a502f"
+    },
+    {
+      "name": "alarm_definitions.csv",
+      "size": 507,
+      "sha256": "7f8fba1f29fe700db67a3166726b5b18ebde8e139412d80ebce43180199bd111"
+    },
+    {
+      "name": "alarm_events.csv",
+      "size": 38817,
+      "sha256": "e9e4a7542ddf6b5c897370a976a40826a6e0fcdf156625e505b978df44884747"
+    },
+    {
+      "name": "corrective_actions.csv",
+      "size": 13073,
+      "sha256": "f6481dcdde1c1ebfd31c24754b8382a7a4a25c3387d995020240fe90027be936"
+    },
+    {
+      "name": "ground_truth.csv",
+      "size": 5395,
+      "sha256": "6347e6699cecc99b3f5500374d5ba7ec24cb86da99e6aadf838c5ac5dde46dce"
+    },
+    {
+      "name": "incidents.csv",
+      "size": 7830,
+      "sha256": "dfb9af7883d791d41a3cfacf29bc9a5659a2b3f6e4bffe66a8ab5a71ff914dbc"
+    },
+    {
+      "name": "interlocks.csv",
+      "size": 767,
+      "sha256": "7257060567a29b2520f11e84b46a91476bc0b718f11e81e7e40b12eacc58d4a6"
+    },
+    {
+      "name": "machines.csv",
+      "size": 342,
+      "sha256": "44f826b67adaea5b2d1abfed0ce0e417bdafe276a56e183ddcd7d69ddc0ac84d"
+    },
+    {
+      "name": "machine_state_events.csv",
+      "size": 31688,
+      "sha256": "3aa9b6d6c14b9da317fda37eb05d49c18a893a4a95bf81782651e5d8b980f1ca"
+    },
+    {
+      "name": "operator_shifts.csv",
+      "size": 13964,
+      "sha256": "4fe064fa6dde95646bf06053fed4246e00cbeb131511e7432f929c47ecbd411f"
+    },
+    {
+      "name": "plants.csv",
+      "size": 153,
+      "sha256": "bed2daaf4e91a6ce2544588fc8507dbc2051ff673d973f8108ce7814ec45dc6a"
+    },
+    {
+      "name": "safety_zones.csv",
+      "size": 643,
+      "sha256": "240d0a942e12bde4e8bb8c775238c90853afcbc56e040714f6b27764df5145dd"
+    },
+    {
+      "name": "manifest.json",
+      "size": 3219,
+      "sha256": "713e77952d0128a55b203d453aebc7732acf60084a881aee145577b238133605"
+    },
+    {
+      "name": "validation_report.json",
+      "size": 4001,
+      "sha256": "37802e524c9c72b3ef32686c718b2ec16b3962cbe28fea60fe2350a8cab04a3e"
+    }
+  ]
+}
