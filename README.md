@@ -1,6 +1,35 @@
 # SafeOps Generator
 
-A deterministic synthetic data engine simulating 30 days of industrial OT telemetry, operator workflows, and critical safety violations for testing and validating safety monitoring systems.
+![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
+![MIT License](https://img.shields.io/badge/license-MIT-green.svg)
+
+A deterministic synthetic data engine simulating 30 days of industrial alarm, operator-workflow, and safety-incident data for testing and validating safety monitoring systems.
+
+## Table of Contents
+
+- [Project Purpose](#project-purpose)
+- [Business Context](#business-context)
+- [Visual Workflow](#visual-workflow)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Use Cases](#use-cases)
+- [Generation Pipeline](#generation-pipeline)
+- [Data Schema](#data-schema)
+- [Anomaly Categories](#anomaly-categories)
+- [Incident Traceability](#incident-traceability)
+- [Ground Truth](#ground-truth)
+- [Validation](#validation)
+- [Reproducibility](#reproducibility)
+- [Output Files](#output-files)
+- [Sample Output](#sample-output)
+- [Evaluating a Detector](#evaluating-a-detector)
+- [Known Assumptions and Limitations](#known-assumptions-and-limitations)
+- [Testing](#testing)
+- [Configuration](#configuration)
+- [Project Structure](#project-structure)
+- [License](#license)
+- [Contact](#contact)
 
 ## Project Purpose
 
@@ -19,6 +48,20 @@ This generator provides such datasets with:
 - Time-series event data (shifts, state changes, alarms, acknowledgements, incidents, corrective actions)
 - Five labeled anomaly categories
 - Ground-truth documentation for validation
+
+## Visual Workflow
+
+```mermaid
+flowchart LR
+    A[Seeded RNG] --> B[Master Data]
+    B --> C[Event Data]
+    C --> D[Anomaly Injection<br/>5 categories]
+    D --> E[Validation]
+    E --> F[Export CSV + SQL]
+    F --> G[Manifest + SHA-256]
+    D -. labels .-> H[ground_truth.csv]
+    E -. report .-> I[validation_report.json]
+```
 
 ## Prerequisites
 
@@ -97,6 +140,13 @@ python -m safeops.generator --profile full --verify-reproducibility
 
 This generates the dataset twice in temporary directories and compares all files byte-for-byte.
 
+## Use Cases
+
+- Testing anomaly detectors with labeled ground truth
+- Validating SIEM/monitoring rule logic
+- Benchmarking data processing pipelines
+- Creating reproducible test fixtures for CI/CD
+
 ## Generation Pipeline
 
 The generator follows this pipeline:
@@ -134,87 +184,26 @@ The generator produces 11 core data entities organized into master/reference dat
 
 ## Anomaly Categories
 
-### Nuisance Alarm Clusters (Operational Metric)
+### Operational Metrics (Not Injected)
 
-**Description:** Groups of 5 or more Low/Medium severity alarms from the same machine within 10 minutes
-**Detection Rule:** 5+ Low/Medium severity alarms from same machine in 10-minute window
-**Business Significance:** Indicates repeated minor issues that may mask genuine safety problems
-**Validation Report:** Includes cluster count, affected machines, and cluster details
+**Nuisance Alarm Clusters**
+- **Detection:** 5+ Low/Medium severity alarms from same machine in 10-minute window
+- **Business Significance:** Indicates repeated minor issues that may mask genuine safety problems
+- **Validation Report:** Includes cluster count, affected machines, and cluster details
 
-### 1. ACK_BEFORE_ALARM
-**Description:** Acknowledgement timestamp precedes alarm timestamp
-**Injection Rule:** Select ~1% of acknowledgements and set acknowledged_at to 1 hour before alarm timestamp
-**Detection:** acknowledgement_time < alarm_time
-**Business Rule:** Acknowledgements must occur after alarms
+### Injected Anomalies
 
-### 2. IMPOSSIBLE_INTERLOCK
-**Description:** Machine in Operational state with Bypassed interlock
-**Injection Rule:** Select ~1% of Operational state events and set interlock_status to Bypassed
-**Detection:** new_state == "Operational" AND interlock_status == "Bypassed"
-**Business Rule:** Operational machines must have Secure interlock
-
-### 3. MISSING_CONTEXT
-**Description:** Incident missing alarm event reference
-**Injection Rule:** Select ~1% of incidents and set alarm_event_id to null
-**Detection:** alarm_event_id is null
-**Business Rule:** Incidents should reference triggering alarm events
-
-### 4. REPLAY_FLOOD
-**Description:** Duplicate alarm events (replay attack simulation)
-**Injection Rule:** Duplicate 50 contiguous alarm events with new IDs and replay_group_id
-**Detection:** Replay records have replay_group_id
-**Business Rule:** Each alarm event should be unique
-**Note:** Fixed at 50 records (not percentage-based)
-
-### 5. UNVERIFIED_CLOSURE
-**Description:** Closed corrective action without verification timestamp
-**Injection Rule:** Select ~1% of Closed actions and set verified_at to null
-**Detection:** status == "Closed" AND verified_at is null
-**Business Rule:** Closed actions must have verification timestamps
+| Anomaly | Injection Rule | Detection Rule | Business Rule |
+|---------|---------------|----------------|---------------|
+| ACK_BEFORE_ALARM | Select ~1% of acknowledgements and set acknowledged_at to 1 hour before alarm timestamp | acknowledged_at < alarm_timestamp | Acknowledgements must occur after alarms |
+| IMPOSSIBLE_INTERLOCK | Select ~1% of Operational state events and set interlock_status to Bypassed | new_state == "Operational" AND interlock_status == "Bypassed" | Operational machines must have Secure interlock |
+| MISSING_CONTEXT | Select ~1% of incidents and set alarm_event_id to null | alarm_event_id is null | Incidents should reference triggering alarm events |
+| REPLAY_FLOOD | Duplicate 50 contiguous alarm events with new IDs and replay_group_id | Replay records have replay_group_id | Each alarm event should be unique (fixed at 50 records) |
+| UNVERIFIED_CLOSURE | Select ~1% of Closed actions and set verified_at to null | status == "Closed" AND verified_at is null | Closed actions must have verification timestamps |
 
 ## Incident Traceability
 
-Incidents can be traced to relevant machine-state history and corrective actions through foreign key relationships:
-
-### Traceability Paths
-
-1. **Incident → Machine State History**
-   - Join: `incidents.machine_id = machine_state_events.machine_id`
-   - Filter: `machine_state_events.timestamp <= incidents.logged_at`
-   - Purpose: View machine state transitions leading up to the incident
-
-2. **Incident → Triggering Alarm**
-   - Join: `incidents.alarm_event_id = alarm_events.alarm_event_id`
-   - Join: `alarm_events.alarm_def_id = alarm_definitions.alarm_def_id`
-   - Purpose: Identify the alarm that triggered the incident
-
-3. **Incident → Corrective Actions**
-   - Join: `incidents.incident_id = corrective_actions.incident_id`
-   - Purpose: View all remediation actions taken for the incident
-
-### Example Query (Pseudo-SQL)
-
-```sql
--- View incident with machine state history and corrective actions
-SELECT
-    i.incident_id,
-    i.severity_level,
-    i.logged_at,
-    mse.previous_state,
-    mse.new_state,
-    mse.interlock_status,
-    ca.action_taken,
-    ca.status,
-    ca.verified_at
-FROM incidents i
-LEFT JOIN machine_state_events mse
-    ON i.machine_id = mse.machine_id
-    AND mse.timestamp <= i.logged_at
-LEFT JOIN corrective_actions ca
-    ON i.incident_id = ca.incident_id
-WHERE i.incident_id = 'INC-2026-000001'
-ORDER BY mse.timestamp DESC, ca.action_id;
-```
+Incidents can be traced to relevant machine-state history and corrective actions through foreign key relationships. For detailed traceability queries and examples, see [docs/INCIDENT_TRACEABILITY.md](docs/INCIDENT_TRACEABILITY.md).
 
 **Note:** For incidents with MISSING_CONTEXT anomaly (alarm_event_id is null), the triggering alarm cannot be traced.
 
@@ -332,6 +321,78 @@ Total: 15 files
 - Python, pandas, NumPy versions
 - File list with sizes and SHA-256 checksums (excludes manifest.json itself)
 
+## Sample Output
+
+### Normal Alarm Event and Acknowledgement
+
+**alarm_events.csv:**
+```
+alarm_event_id        ALM-MCH-001-000006
+alarm_def_id                    DEF-0010
+timestamp           2026-01-01T03:19:43Z
+current_value                     109.09
+interlock_status                  Secure
+```
+
+**acknowledgements.csv:**
+```
+ack_id             ACK-ALM-MCH-001-000006-01
+alarm_event_id            ALM-MCH-001-000006
+acknowledged_at         2026-01-01T04:46:43Z
+```
+
+### Injected Anomaly Example
+
+**ground_truth.csv (ACK_BEFORE_ALARM):**
+```
+target_table                                     acknowledgements
+entity_id                               ACK-ALM-MCH-001-000037-01
+anomaly_type                                     ACK_BEFORE_ALARM
+description     Acknowledgement timestamp precedes alarm timestamp
+```
+
+**validation_report.json excerpt:**
+```json
+{
+  "expected_anomalies": {
+    "REPLAY_FLOOD": 50,
+    "ACK_BEFORE_ALARM": 3,
+    "UNVERIFIED_CLOSURE": 1,
+    "MISSING_CONTEXT": 1,
+    "IMPOSSIBLE_INTERLOCK": 1
+  },
+  "structural_integrity": "pass"
+}
+```
+
+**Note:** Anomaly labels are stored in ground_truth.csv, not embedded in operational tables.
+
+## Evaluating a Detector
+
+To evaluate an anomaly detector against the ground truth:
+
+```python
+import pandas as pd
+
+# Load ground truth and detector output
+ground_truth = pd.read_csv('ground_truth.csv')
+detector_output = pd.read_csv('detector_results.csv')
+
+# Calculate precision and recall
+ground_truth_ids = set(ground_truth[ground_truth['anomaly_type'] == 'ACK_BEFORE_ALARM']['entity_id'])
+detected_ids = set(detector_output['entity_id'])
+
+true_positives = len(ground_truth_ids & detected_ids)
+false_positives = len(detected_ids - ground_truth_ids)
+false_negatives = len(ground_truth_ids - detected_ids)
+
+precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
+recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
+
+print(f"Precision: {precision:.2%}")
+print(f"Recall: {recall:.2%}")
+```
+
 ## Known Assumptions and Limitations
 
 ### Assumptions
@@ -344,7 +405,7 @@ Total: 15 files
 ### Limitations
 - No external database integration (CSV and SQL export only, no direct database connection)
 - No frontend or visualization
-- No LLM or external data sources
+- The generator itself uses no LLM or external data at runtime (ai-prompts/ documents development-time AI assistance)
 - Replay flood fixed at 50 records (not configurable)
 - Validation does not repair injected anomalies
 - Reproducibility not guaranteed across different dependency versions
@@ -366,15 +427,6 @@ pytest safeops/tests/test_anomaly_injector.py
 pytest safeops/tests/test_validate.py
 pytest safeops/tests/test_generator.py
 ```
-
-**Test Coverage:**
-- Configuration: 58 tests
-- Master data: 102 tests
-- Event engine: 80 tests
-- Anomaly injector: 56 tests
-- Validation: 52 tests
-- Generator: 32 tests
-- **Total: 380 tests**
 
 ## Configuration
 
@@ -408,21 +460,25 @@ industrial-safeops-generator/
 │       ├── test_anomaly_injector.py
 │       ├── test_validate.py
 │       └── test_generator.py
+├── ai-prompts/                # AI-assisted development history documentation
+├── docs/                      # Additional documentation
+├── output_dev/                # DEV profile output (gitignored)
 ├── requirements.txt
 ├── README.md
 ├── DATA_DICTIONARY.md
-└── plan.md
+├── LICENSE
+├── .gitignore
+├── verify_checksums.py        # Checksum verification utility
+└── plan.md                    # Project planning notes (gitignored)
 ```
 
-## License
+## Roadmap and Contributing
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This is a stable, deterministic data generator suitable for testing environments. Contributions to add new anomaly types, data entities, or export formats are welcome.
 
 ## Contact
 
 Rakesh Podishetti
-
-GitHub: https://github.com/PodishettiRakesh
 
 LinkedIn: https://linkedin.com/in/podisheeti-rakesh
 
